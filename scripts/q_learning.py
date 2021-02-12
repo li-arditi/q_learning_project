@@ -4,12 +4,12 @@ import rospy
 
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 from sensor_msgs.msg import LaserScan
-from q_learning_project.msg import QMatrix, QLearningReward, RobotMoveDBToBlock
+from msg import QMatrix, QLearningReward, RobotMoveDBToBlock
 
 from random import randint, random, choice, uniform
 from tf.transformations import quaternion_from_euler, euler_from_quaternion
 
-
+import math
 
 class QLearning(object):
     def __init__(self):
@@ -41,11 +41,3 @@ class QLearning(object):
 
 
 
-
-
-
-
-if __name__=="__main__":
-    ql = QLearning()
-
-    rospy.spin()
