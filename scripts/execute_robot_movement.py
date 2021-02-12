@@ -5,7 +5,7 @@ import rospy, cv2, cv_bridge
 from sensor_msgs.msg import LaserScan, Image
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 import moveit_commander
-from msg import RobotMoveDBToBlock
+from q_learning_project.msg import RobotMoveDBToBlock
 
 from tf.transformations import quaternion_from_euler, euler_from_quaternion
 
@@ -24,7 +24,7 @@ class ExecuteRobotActions(object):
 
         rospy.Subscriber("/q_learning/robot_action", RobotMoveDBToBlock, self.move_robot)
         rospy.Subscriber("/scan", LaserScan, self.process_scan)
-        rospy.Subscriber('camera/rgb/image_raw', Image, self.process)image)
+        rospy.Subscriber('camera/rgb/image_raw', Image, self.process_image)
 
         self.move_group_arm = moveit_commander.MoveGroupCommander("arm")
         self.move_group_gripper = moveit_commander.MoveGroupCommander("gripper")
