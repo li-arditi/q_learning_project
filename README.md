@@ -8,10 +8,10 @@
   * use formula given and translate it to code
 
 * Determining when the Q-matrix has converged
-  * 
+  * I would need to keep a copy of the intial Q matrix before it's updated. Then once it's updated I compare the new Q matrix to the initial matrix and check if it is the same or not. The Q learning algorithm continues until the matrix doesn't change anymore (or changes very rarely)
 
 * Determining robot actions
-  *
+  * After the Q matrix has converged the robot will use matrix 
 
 ### Robot perception
 
@@ -19,7 +19,7 @@
   * use the robot camera color sensor and LaserScan data (specifically for what's in front of it) to identify and move to the dumbbell
 
 * Determining identities and locations of numbered blocks
-  * Use the robot camera
+  * Use robot vision to distinguish numbered blocks. 
 
 
 ### RObot manipulation & movement
