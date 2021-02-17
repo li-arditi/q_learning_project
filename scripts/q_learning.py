@@ -113,7 +113,7 @@ class QLearning(object):
 
 
 
-    def process_scan(self, data):
+    def get_reward(self, data):
         pass
 
 

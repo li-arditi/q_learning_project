@@ -5,27 +5,27 @@
 ### Q-learning algorithm
 
 * Executing the Q-learning algorithm
-  * use formula given and translate it to code
+  * Create an action dictionary with all possible actions and a state dictionary with all possible states. Using those two dictionaries create an action matrix that has all valid actions the robot can take from a given state (this will be used in the Q learning algorithm to randomly select an action to perform). Use the Q-learning algorithm provided in class to determine values to update the Q matrix. Test this by using the phantom movement program?
 
 * Determining when the Q-matrix has converged
-  * I would need to keep a copy of the intial Q matrix before it's updated. Then once it's updated I compare the new Q matrix to the initial matrix and check if it is the same or not. The Q learning algorithm continues until the matrix doesn't change anymore (or changes very rarely)
+  * I would need to keep a copy of the intial Q matrix before it's updated. Then once it's updated I compare the new Q matrix to the initial matrix and check if it is the same or not. The Q learning algorithm continues until the matrix doesn't change anymore (or changes very rarely). Also use the phantom movement program? 
 
 * Determining robot actions
-  * After the Q matrix has converged the robot will use matrix 
+  * After the Q matrix has converged the robot will use the matrix to determine the best action to take. (Given the current state, the next action will be the one that has the highest Q value for that state). I could test this by looking at the converged Q matrix and determine which actions the robot should take and see if it matches what the robot does.
 
 ### Robot perception
 
 * Determining identities and locations of dumbbells
-  * use the robot camera color sensor and LaserScan data (specifically for what's in front of it) to identify and move to the dumbbell
+  * Use the robot camera color sensor and LaserScan data (specifically for what's in front of it) to identify and move to the dumbbell. Testing would involve telling the robot to go to a specific dumbbell and see if it goes to the correct one
 
 * Determining identities and locations of numbered blocks
-  * Use robot vision to distinguish numbered blocks. 
+  * Use robot vision to distinguish numbered blocks. I would test this by telling the robot to go in front of a certain block and see if it goes to the correct one
 
 
 ### RObot manipulation & movement
 
 * Picking up and putting down dumbbells
-  * Once the robot is at the correct dumbbell it should have open grippers with the gripper at the handle of the dumbbell. To pick up the dumbbell it should close the grippers and move the end effector upwards until the dumbell is off the ground. Testing would involve placing the robot in the correct position and running the code to see if it successfully lifts the dumbbell
+  * Once the robot is at the correct dumbbell it should have open grippers with the gripper at the handle of the dumbbell. To pick up the dumbbell it should close the grippers and move the gripper upwards until the dumbell is off the ground. Testing would involve placing the robot in the correct position and running the code to see if it successfully lifts the dumbbell
 
 * Navigating to locations for pick up and put down of dumbbells
   * First I need to get the color dumbbell (robot_db) and block number (block_id) from q-learning algorithm. Then use the sensor data/functions from robot perception to navigate to the correct dumbbell, pick it up, carry it to the correct block, and place it in front of the block
