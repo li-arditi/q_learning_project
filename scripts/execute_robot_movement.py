@@ -9,6 +9,10 @@ from q_learning_project.msg import RobotMoveDBToBlock
 
 from tf.transformations import quaternion_from_euler, euler_from_quaternion
 
+import robot_perception
+
+from q_learning import QLearning
+
 # subscribe to /q_learning/robot_action topic
 # that topic has custom message q_learning/RObotMoveDBToBlock
 # the msg has attributes robot_db and block_id
@@ -19,6 +23,11 @@ class ExecuteRobotActions(object):
     def __init__(self):
         # initialize node
         rospy.init_node('execute_actions')
+
+        # get the converged q_matrix
+        # self.QLearning = QLearning()
+        # self.q_matrix = self.QLearning.q_matrix.q_matrix
+        # self.all_actions = self.QLearning.all_actions
 
         self.cmd_vel_pub = rospy.Publisher("cmd_vel", Twist, queue_size=10)
 
@@ -31,6 +40,10 @@ class ExecuteRobotActions(object):
 
         # self.arm_joint_goal = [0.0,0.0,0.0,0.0]
         # self.gripper_joint_goal = [0.0,0.0]
+
+
+
+
     
             
     
@@ -40,18 +53,7 @@ class ExecuteRobotActions(object):
     def get_block_location(self, block_id):
         pass
 
-    def process_scan(self, data):
-        # data is msg type RobotMoveDBToBlock which has attrs
-        # robot_db and block_id
-        pass
-
-        
     
-    def process_image(self, msg):
-        pass
-        img = cv2.imread(filename)
-        bridge = cv_bridge.CvBridge()
-        imgMsg = bridge.cv2_to_imgmsg(img, "bgr8")
 
 
 
