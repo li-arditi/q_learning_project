@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import rospy, cv2, cv_bridge
+import keras_ocr
 
 from sensor_msgs.msg import LaserScan, Image
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
@@ -9,10 +10,15 @@ from q_learning_project.msg import RobotMoveDBToBlock
 
 from tf.transformations import quaternion_from_euler, euler_from_quaternion
 
-class RobotPerception(object):
+# position of blocks:
+# Point(x=-2.4, y=-2.0, z=0.4),
+# Point(x=-2.4, y=0.0, z=0.4),
+# Point(x=-2.4, y=2.0, z=0.4)
+
+class IdentifyBlocks(object):
     def __int__(self):
         # initialize node
-        rospy.init_node('identify_dbs_blocks')
+        rospy.init_node('identify_blocks')
 
         rospy.Subscriber("/scan", LaserScan, self.process_scan)
         rospy.Subscriber('camera/rgb/image_raw', Image, self.process_image)
@@ -26,27 +32,7 @@ class RobotPerception(object):
     def process_image(self, data):
         pass
         pipeline = keras_ocr.pipeline.Pipeline()
-        # img = cv2.imread(filename)
-        bridge = cv_bridge.CvBridge()
         
-        image = bridge.cv2_to_imgmsg(data, "bgr8")
-        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-
-        # upper and lower bounds for red
-        lower_red = numpy.array([20, 100, 100]) #TODO
-        upper_red = numpy.array([40, 255, 255]) #TODO
-        mask_red = cv2.inRange(hsv, lower_red, upper_red)
-
-        # upper and lower bounds for green
-        lower_green = numpy.array([20, 100, 100]) #TODO
-        upper_green = numpy.array([40, 255, 255]) #TODO
-        mask_green = cv2.inRange(hsv, lower_green, upper_green)
-
-        # upper and lower bounds for blue
-        lower_blue = numpy.array([20, 100, 100]) #TODO
-        upper_blue = numpy.array([40, 255, 255]) #TODO
-        mask_blue = cv2.inRange(hsv, lower_blue, upper_blue)
-
 
     def process_scan(self, data):
         # data is msg type RobotMoveDBToBlock which has attrs

@@ -133,7 +133,7 @@ class QLearning(object):
 
         self.possible_actions = get_possible_actions(self.action_matrix) # array of numpy arrays
 
-        self.reward = QLearningReward()
+        self.reward = 0
 
         #initialize q_matrix
         self.q_matrix = QMatrix()
@@ -145,6 +145,7 @@ class QLearning(object):
 
         self.updated_q_matrix = None
         self.converged = False
+        self.action_seq = []
 
         self.converge_q_matrix()
  
@@ -191,7 +192,12 @@ class QLearning(object):
         alpha = 1
         gamma = 0.5
         while self.converged == False:
-            rospy.loginfo("new iteration")
+            # rospy.loginfo("new iteration")
+            if self.possible_actions[s_t].size == 0:
+                rospy.loginfo("reset")
+                s_t = 0
+                rospy.sleep(1)
+                continue
         
             self.updated_q_matrix = deepcopy(self.q_matrix)
             current_state = self.all_states[s_t] # list of location of r, b, g db
@@ -208,29 +214,30 @@ class QLearning(object):
             self.action.block_id = self.all_actions[a_t][1]
             self.robot_action_pub.publish(self.action)
             rospy.sleep(1)
+            
 
-            # get reward
-            # reward = reward_msg.reward
-            # rospy.loginfo(self.reward.reward)
 
             # get next state index and value
             (s_tp1, next_state) = self.get_next_state(current_state, a_t)
             # rospy.loginfo(current_state)
             rospy.loginfo(s_tp1)
             rospy.loginfo(next_state)
+            
 
             # update q_matrix and publish
             max_Q_s_tp1 = max(self.q_matrix.q_matrix[s_tp1].q_matrix_row)
-            self.updated_q_matrix.q_matrix[s_t].q_matrix_row[a_t] = int(Q_sa + alpha * (self.reward.reward + (gamma * max_Q_s_tp1) - Q_sa))
+            self.updated_q_matrix.q_matrix[s_t].q_matrix_row[a_t] = int(Q_sa + alpha * (self.reward + (gamma * max_Q_s_tp1) - Q_sa))
             self.q_matrix_pub.publish(self.updated_q_matrix)
 
             # check if matrix has converged
-            if 
+            
+            if self.reward == 100:
+                rospy.loginfo(self.updated_q_matrix.q_matrix)
 
 
             self.q_matrix = deepcopy(self.updated_q_matrix)
             s_t = s_tp1
-            rospy.loginfo(s_t)
+            # rospy.loginfo(s_t)
 
 
             
@@ -239,16 +246,20 @@ class QLearning(object):
             
 
     def get_reward(self, reward_msg):
-        self.reward = reward_msg
+        rospy.loginfo(reward_msg.reward)
+        self.reward = reward_msg.reward
     
     def get_action_sequence(self):
-        max_q = max(self.q_matrix.q_matrix[s_t])
-        action_idx = self.q_matrix.q_matrix[s_t].index(max_q)
-        robot_action = self.all_actions[action_idx]
+        pass
+        if self.converged == False:
+            return
+        # max_q = max(self.q_matrix.q_matrix[s_t])
+        # action_idx = self.q_matrix.q_matrix[s_t].index(max_q)
+        # robot_action = self.all_actions[action_idx]
 
-        self.action.robot_db = self.all_actions[a_t][0]
-        self.action.block_id = self.all_actions[a_t][1]
-        self.robot_action_pub.publish(self.action)
+        # self.action.robot_db = self.all_actions[a_t][0]
+        # self.action.block_id = self.all_actions[a_t][1]
+        # self.robot_action_pub.publish(self.action)
 
 
     
