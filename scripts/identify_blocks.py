@@ -20,6 +20,8 @@ class IdentifyBlocks(object):
         # initialize node
         rospy.init_node('identify_blocks')
 
+        self.cmd_vel_pub = rospy.Publisher("cmd_vel", Twist, queue_size=10)
+
         rospy.Subscriber("/scan", LaserScan, self.process_scan)
         rospy.Subscriber('camera/rgb/image_raw', Image, self.process_image)
 
@@ -38,3 +40,11 @@ class IdentifyBlocks(object):
         # data is msg type RobotMoveDBToBlock which has attrs
         # robot_db and block_id
         pass
+
+    def run(self):
+        rospy.spin()
+
+
+if __name__ == '__main__':
+    node = IdentifyBlocks()
+    node.run()
