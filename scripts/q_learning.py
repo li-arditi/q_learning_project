@@ -62,9 +62,7 @@ def create_action_matrix(all_states, all_actions):
             if i == j:
                 continue
             # check if next state is valid (can't have same block numbers)
-            if ((j_state.count(1) > 1) | (j_state.count(2) > 1) | (j_state.count(3) > 1)):
-                #action_matrix[i][j] = -1
-                
+            if ((j_state.count(1) > 1) | (j_state.count(2) > 1) | (j_state.count(3) > 1)):                
                 continue
 
             # compare current state i to next state j
@@ -76,15 +74,7 @@ def create_action_matrix(all_states, all_actions):
             # check if valid transition (can't have 2 dbs change position)
             if sum(loc_change) > 1:
                 # invalid next state
-                #action_matrix[i][j] = -1
-                
                 continue
-
-            
-            # if sum(loc_change) == 0:
-            #     #action_matrix[i][j] = -1
-                
-            #     continue
 
             # if valid transition find action index to use as value
             db_ind = loc_change.index(1)
@@ -113,7 +103,7 @@ class QLearning(object):
         # initialize node
         rospy.init_node('q_learning')
 
-        # self.initialized = False
+        # 
 
         # publish to /q_learning/q_matrix with message type q_learning_QMatrix each time Q matrix is updated
         self.q_matrix_pub = rospy.Publisher("/q_learning/q_matrix", QMatrix, queue_size=10)
@@ -134,7 +124,7 @@ class QLearning(object):
         self.possible_actions = get_possible_actions(self.action_matrix) # array of numpy arrays
 
         self.reward = 0
-
+        self.initialized = False
         #initialize q_matrix
         self.q_matrix = QMatrix()
         # rospy.loginfo(self.q_matrix)
@@ -143,11 +133,13 @@ class QLearning(object):
         # rospy.loginfo(self.q_matrix)
         # rospy.loginfo(self.q_matrix.q_matrix)
 
-        self.updated_q_matrix = None
+        self.current_q_matrix = None
         self.converged = False
         self.action_seq = []
+        self.initialized = True
 
         self.converge_q_matrix()
+        
  
         # self.initialized = True
     
@@ -160,9 +152,6 @@ class QLearning(object):
             
             self.q_matrix.q_matrix.append(qrow)
             
-
-            # self.q_matrix.q_matrix
-
 
     
     def get_next_state(self, current_state, a_t):
@@ -187,59 +176,88 @@ class QLearning(object):
 
     
     def converge_q_matrix(self):
+        if not self.initialized:
+            return
+
         t = 0
         s_t = 0
         alpha = 1
         gamma = 0.5
         while self.converged == False:
-            # rospy.loginfo("new iteration")
             if self.possible_actions[s_t].size == 0:
                 rospy.loginfo("reset")
                 s_t = 0
-                rospy.sleep(1)
+                rospy.sleep(.5)
                 continue
+
+            if self.current_q_matrix == None:
+                self.current_q_matrix = deepcopy(self.q_matrix)
+
+            if t != 0 and t % 60 == 0:
+                rospy.loginfo(t)
+                # check if converged
+                equal = False
+                
+                for i, row in enumerate(self.q_matrix.q_matrix):
+                    last = np.array(row.q_matrix_row)
+                    rospy.loginfo(last)
+                    current = np.array(self.current_q_matrix.q_matrix[i].q_matrix_row)
+                    rospy.loginfo(current)
+                    if np.allclose(last, current, atol = 0.001):
+                        equal = True
+                        continue
+                    else:
+                        equal = False
+                        break
+                
+                if equal:
+                    rospy.loginfo("converged")
+                    self.converged = True
+                    return
+                
+                self.q_matrix = deepcopy(self.current_q_matrix)
+
+
+            # rospy.loginfo("new iteration")
+            
         
-            self.updated_q_matrix = deepcopy(self.q_matrix)
             current_state = self.all_states[s_t] # list of location of r, b, g db
-            rospy.loginfo(current_state)
+            # rospy.loginfo(current_state)
             
             # select action based on current state 
             a_t = choice(self.possible_actions[s_t])
-            rospy.loginfo(a_t)
+            # rospy.loginfo(a_t)
             
-            Q_sa = self.q_matrix.q_matrix[s_t].q_matrix_row[a_t]
+            Q_sa = self.current_q_matrix.q_matrix[s_t].q_matrix_row[a_t]
 
             # perform action
             self.action.robot_db = self.all_actions[a_t][0]
             self.action.block_id = self.all_actions[a_t][1]
             self.robot_action_pub.publish(self.action)
-            rospy.sleep(1)
+            rospy.sleep(.5)
             
 
 
             # get next state index and value
             (s_tp1, next_state) = self.get_next_state(current_state, a_t)
-            # rospy.loginfo(current_state)
-            rospy.loginfo(s_tp1)
-            rospy.loginfo(next_state)
+            # 
+            # if self.reward == 100:
+            #     rospy.loginfo(current_state)
+            #     rospy.loginfo(s_tp1)
+            #     rospy.loginfo(next_state)
+
             
 
             # update q_matrix and publish
-            max_Q_s_tp1 = max(self.q_matrix.q_matrix[s_tp1].q_matrix_row)
-            self.updated_q_matrix.q_matrix[s_t].q_matrix_row[a_t] = int(Q_sa + alpha * (self.reward + (gamma * max_Q_s_tp1) - Q_sa))
-            self.q_matrix_pub.publish(self.updated_q_matrix)
+            max_Q_s_tp1 = max(self.current_q_matrix.q_matrix[s_tp1].q_matrix_row)
+            self.current_q_matrix.q_matrix[s_t].q_matrix_row[a_t] = int(Q_sa + alpha * (self.reward + (gamma * max_Q_s_tp1) - Q_sa))
+            self.q_matrix_pub.publish(self.current_q_matrix)
+            rospy.sleep(.5)
 
             # check if matrix has converged
             
-            if self.reward == 100:
-                rospy.loginfo(self.updated_q_matrix.q_matrix)
-
-
-            self.q_matrix = deepcopy(self.updated_q_matrix)
             s_t = s_tp1
             # rospy.loginfo(s_t)
-
-
             
             t += 1
 
