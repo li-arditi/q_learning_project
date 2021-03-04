@@ -14,12 +14,7 @@ from tf.transformations import quaternion_from_euler, euler_from_quaternion
 
 from q_learning import QLearning
 import robot_perception
-# from identify_dbs import IdentifyDbs
-# from identify_blocks import IdentifyBlocks
 
-# subscribe to /q_learning/robot_action topic
-# that topic has custom message q_learning/RObotMoveDBToBlock
-# the msg has attributes robot_db and block_id
 
 # start 0.0, -0.386, 1.315, -0.862 
 rest_arm_joint_goal = [0.0, -0.386, 1.280, -0.915]
@@ -37,6 +32,7 @@ class ExecuteRobotActions(object):
     def __init__(self):
         # initialize node
         rospy.init_node('execute_actions')
+        
         self.initialized = False
 
 
@@ -60,7 +56,6 @@ class ExecuteRobotActions(object):
         self.move_group_gripper.stop()
         # rospy.sleep(3)
 
-        
         self.action_queue = []
         self.yaw = 0
         self.x = 0
@@ -70,8 +65,8 @@ class ExecuteRobotActions(object):
         self.db_identified = False
         # self.db_image = rospy.wait_for_message('camera/rgb/image_raw', Image)
         # self.db_locations = robot_perception.identify_dbs(self.db_image)
-        self.db_locations = {"red": Point(x=1.0635, y=-0.5, z=0.1905), "blue": Point(x=1.0635, y=0.0, z=0.1905),\
-    "green": Point(x=1.0635, y=0.5, z=0.1905)}
+        self.db_locations = {"red": Point(x=1.0635, y=-0.5, z=0.1905), "blue": Point(x=1.0635, y=0.5, z=0.1905),\
+    "green": Point(x=1.0635, y=0.0, z=0.1905)}
         self.db_identified = True
         rospy.loginfo(self.db_locations)
         
@@ -82,8 +77,8 @@ class ExecuteRobotActions(object):
         
         self.blocks_identified = False
         # self.get_block_locations()
-        self.block_locations = {1: Point(x=-2.4, y=-2.0, z=0.4), 2: Point(x=-2.4, y=0.0, z=0.4), \
-    3: Point(x=-2.4, y=2.0, z=0.4)}
+        self.block_locations = {1: Point(x=-2.4, y=2.0, z=0.4), 2: Point(x=-2.4, y=0.0, z=0.4), \
+    3: Point(x=-2.4, y=-2.0, z=0.4)}
         rospy.loginfo(self.block_locations)
 
         self.blocks_identified = True
@@ -249,9 +244,10 @@ class ExecuteRobotActions(object):
         
         if not self.initialized:
             return 
-        self.action_queue.append(RobotMoveDBToBlock(robot_db = "green", block_id = 3))
+        self.action_queue.append(RobotMoveDBToBlock(robot_db = "red", block_id = 3))
+        self.action_queue.append(RobotMoveDBToBlock(robot_db = "green", block_id = 1))
+        self.action_queue.append(RobotMoveDBToBlock(robot_db = "blue", block_id = 2))
 
-        
 
 
         if len(self.action_queue) > 0:

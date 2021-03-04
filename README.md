@@ -131,9 +131,11 @@ Future work would definitely include getting the robot movement to work fully. I
 
 ### Gifs of robot executing task
 
-![robot determining locations](robot_determining_locations.gif)
+Robot determining locations of dumbbells and blocks
+
+![robot determining locations](getting_locations.gif)
 
 Robot moving to and picking up dumbbell
 
-![robot determining locations](robot_determining_locations.gif)
+![robot picking up blue db](pick_up_blue.gif)
 

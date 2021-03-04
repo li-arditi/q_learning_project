@@ -6,8 +6,8 @@ from geometry_msgs.msg import Point
 
 
 # position of dbs
-db_locations = {"left": Point(x=1.0635, y=-0.5, z=0.1905), "middle": Point(x=1.0635, y=0.0, z=0.1905),\
-    "right": Point(x=1.0635, y=0.5, z=0.1905)}
+db_locations = {"left": Point(x=1.0635, y=0.5, z=0.1905), "middle": Point(x=1.0635, y=0.0, z=0.1905),\
+    "right": Point(x=1.0635, y=-0.5, z=0.1905)}
 
 # position of blocks
 block_locations = {"left": Point(x=-2.4, y=-2.0, z=0.4), "middle": Point(x=-2.4, y=0.0, z=0.4), \

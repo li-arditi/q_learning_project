@@ -202,10 +202,13 @@ class QLearning(object):
                 # check if converged
                 equal = False
                 
+                
                 # compare each row in the last save matrix with the current matrix
                 for i, row in enumerate(self.q_matrix.q_matrix):
                     last = np.array(row.q_matrix_row)
+                    rospy.loginfo(last)
                     current = np.array(self.current_q_matrix.q_matrix[i].q_matrix_row)
+                    rospy.loginfo(current)
                     if np.allclose(last, current, atol = 10):
                         equal = True
                         continue
