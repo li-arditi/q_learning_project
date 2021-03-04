@@ -81,6 +81,7 @@ def identify_blocks(images):
         cv2_images.append(bridge.imgmsg_to_cv2(image, "bgr8"))
 
     predictions = pipeline.recognize(cv2_images)
+    rospy.loginfo(predictions)
 
     blocks["left"] = int(predictions[0][0][0])
     blocks["middle"] = int(predictions[1][0][0])

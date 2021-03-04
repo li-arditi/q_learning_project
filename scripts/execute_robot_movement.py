@@ -63,10 +63,10 @@ class ExecuteRobotActions(object):
 
         # determine location of dbs
         self.db_identified = False
-        # self.db_image = rospy.wait_for_message('camera/rgb/image_raw', Image)
-        # self.db_locations = robot_perception.identify_dbs(self.db_image)
-        self.db_locations = {"red": Point(x=1.0635, y=-0.5, z=0.1905), "blue": Point(x=1.0635, y=0.5, z=0.1905),\
-    "green": Point(x=1.0635, y=0.0, z=0.1905)}
+        self.db_image = rospy.wait_for_message('camera/rgb/image_raw', Image)
+        self.db_locations = robot_perception.identify_dbs(self.db_image)
+    #     self.db_locations = {"red": Point(x=1.0635, y=0.5, z=0.1905), "blue": Point(x=1.0635, y=-0.5, z=0.1905),\
+    # "green": Point(x=1.0635, y=0.0, z=0.1905)}
         self.db_identified = True
         rospy.loginfo(self.db_locations)
         
@@ -76,9 +76,9 @@ class ExecuteRobotActions(object):
         self.block_locations = {}
         
         self.blocks_identified = False
-        # self.get_block_locations()
-        self.block_locations = {1: Point(x=-2.4, y=2.0, z=0.4), 2: Point(x=-2.4, y=0.0, z=0.4), \
-    3: Point(x=-2.4, y=-2.0, z=0.4)}
+        self.get_block_locations()
+    #     self.block_locations = {1: Point(x=-2.4, y=2.0, z=0.4), 2: Point(x=-2.4, y=0.0, z=0.4), \
+    # 3: Point(x=-2.4, y=-2.0, z=0.4)}
         rospy.loginfo(self.block_locations)
 
         self.blocks_identified = True
@@ -119,7 +119,7 @@ class ExecuteRobotActions(object):
     def scan_blocks(self, ang):
         r = rospy.Rate(10)
         while not rospy.is_shutdown() and round(math.radians(ang)-self.yaw, 2) != 0:
-            self.move.angular.z = -0.4 * abs(math.radians(ang)-self.yaw)
+            self.move.angular.z = -0.3 * abs(math.radians(ang)-self.yaw)
             self.cmd_vel_pub.publish(self.move)
             r.sleep()   
 
@@ -218,12 +218,14 @@ class ExecuteRobotActions(object):
 
 
         while not math.isclose(goal_y, self.y, abs_tol = 0.01):
-            self.move.linear.x = 0.4 * abs(goal_y - self.y)
+            self.move.linear.x = 0.2
             self.move.angular.z = 0
             rospy.loginfo(self.move)
 
             self.cmd_vel_pub.publish(self.move)
         self.cmd_vel_pub.publish(Twist())
+
+        self.rotate((math.radians(180)))
         rospy.loginfo("got to location")
 
     def rotate(self, goal_angle):
@@ -250,7 +252,7 @@ class ExecuteRobotActions(object):
 
 
 
-        if len(self.action_queue) > 0:
+        while len(self.action_queue) > 0:
             take_action = self.action_queue[0] # a RobotMoveDBToBlock message
 
             robot_db_loc = self.db_locations[take_action.robot_db] # Point()
