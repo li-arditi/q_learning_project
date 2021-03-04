@@ -111,7 +111,7 @@ class ExecuteRobotActions(object):
         images = []
         for ang in angles:
             # for each angle (left, middle, right) get an image
-            self.rotate(ang)
+            self.scan_blocks(ang)
 
             get_image = rospy.wait_for_message('camera/rgb/image_raw', Image)
             images.append(get_image)
@@ -121,7 +121,7 @@ class ExecuteRobotActions(object):
         self.block_locations = robot_perception.identify_blocks(images)
         
 
-    def rotate(self, ang):
+    def scan_blocks(self, ang):
         r = rospy.Rate(10)
         while not rospy.is_shutdown() and round(math.radians(ang)-self.yaw, 2) != 0:
             self.move.angular.z = -0.4 * abs(math.radians(ang)-self.yaw)
@@ -150,7 +150,7 @@ class ExecuteRobotActions(object):
             rospy.loginfo(angle_to_goal)
             # rospy.loginfo(math.degrees(angle_to_goal - self.yaw))
             # rospy.loginfo(round(angle_to_goal - self.yaw, 1))
-            if round(angle_to_goal - self.yaw, 2) != 0 and not math.isclose(goal_y, self.y, abs_tol = 0.01):
+            if round(angle_to_goal - self.yaw, 1) != 0 and not math.isclose(goal_y, self.y, abs_tol = 0.01):
                 # rospy.loginfo("angular z")
                 # rospy.loginfo(0.4 * (angle_to_goal - self.yaw))
                 self.move.angular.z = 0.4 * (angle_to_goal - self.yaw)
@@ -177,39 +177,68 @@ class ExecuteRobotActions(object):
         
         
     
-    def place_at_block(self, block_loc):
+    # def place_at_block(self, block_loc):
         
-        at_location = False
+    #     at_location = False
+    #     (goal_x, goal_y) = (block_loc.x + 1, block_loc.y)
+    #     diff_x = goal_x - self.x
+    #     diff_y = goal_y - self.y
+
+    #     goal_angle = math.atan2(diff_y, diff_x)
+        
+    #     r = rospy.Rate(35) 
+    #     while not at_location:
+    #         rospy.loginfo("yaw")
+    #         rospy.loginfo(self.yaw)
+    #         rospy.loginfo("goal angle")
+    #         rospy.loginfo(goal_angle)
+    #         if round(goal_angle - self.yaw, 2) != 0 and not math.isclose(goal_y, self.y, abs_tol = 0.01):
+    #             self.move.angular.z = (goal_angle - self.yaw)/5
+    #             self.move.linear.x = 0
+
+    #         elif not math.isclose(goal_y, self.y, abs_tol = 0.01):
+    #             self.move.linear.x = 0.5 * abs(goal_y - self.y)
+    #             self.move.angular.z = 0
+                
+    #             # rospy.loginfo("linear x")
+    #             # rospy.loginfo(0.4 * abs(goal_y - self.y))
+
+    #         elif round(math.radians(-180) - self.yaw, 1) != 0:
+    #             self.move.angular.z = 0.4 * (math.radians(-180) - self.yaw)
+    #             self.move.linear.x = 0
+    #         else:
+    #             self.cmd_vel_pub.publish(Twist())
+    #             at_location = True
+
+    #         self.cmd_vel_pub.publish(self.move)
+    #         r.sleep()
+
+    def place_at_block(self, block_loc):
         (goal_x, goal_y) = (block_loc.x + 1, block_loc.y)
         diff_x = goal_x - self.x
         diff_y = goal_y - self.y
 
         goal_angle = math.atan2(diff_y, diff_x)
-        
-        r = rospy.Rate(20) 
-        while not at_location:
-            rospy.loginfo("yaw")
-            rospy.loginfo(self.yaw)
-            rospy.loginfo("goal angle")
-            rospy.loginfo(goal_angle)
-            if round(goal_angle - self.yaw, 1) != 0 and not math.isclose(goal_y, self.y, abs_tol = 0.01):
-                self.move.angular.z = 0.4 * (goal_angle - self.yaw)
+        self.rotate(goal_angle)
 
-            elif not math.isclose(goal_y, self.y, abs_tol = 0.01):
-                self.move.linear.x = 0.5 * abs(goal_y - self.y)
-                self.move.angular.z = 0
-                # rospy.loginfo("linear x")
-                # rospy.loginfo(0.4 * abs(goal_y - self.y))
 
-            elif round(math.radians(-180) - self.yaw, 1) != 0:
-                self.move.angular.z = 0.4 * (math.radians(-180) - self.yaw)
-                self.move.linear.x = 0
-            else:
-                self.cmd_vel_pub.publish(Twist())
-                at_location = True
+        while not math.isclose(goal_y, self.y, abs_tol = 0.01):
+            self.move.linear.x = 0.4 * abs(goal_y - self.y)
+            self.move.angular.z = 0
+            rospy.loginfo(self.move)
 
             self.cmd_vel_pub.publish(self.move)
-            r.sleep()
+        self.cmd_vel_pub.publish(Twist())
+        rospy.loginfo("got to location")
+
+    def rotate(self, goal_angle):
+        while round(goal_angle - self.yaw, 1) != 0:
+            self.move.angular.z = (goal_angle - self.yaw)/4
+            self.move.linear.x = 0
+
+            self.cmd_vel_pub.publish(self.move)
+        self.cmd_vel_pub.publish(Twist())
+
 
 
 

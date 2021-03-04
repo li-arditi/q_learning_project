@@ -4,13 +4,6 @@ import rospy, cv2, cv_bridge, numpy, keras_ocr
 
 from geometry_msgs.msg import Point
 
-# will have functions to determine locations of db and blocks
-# bds function given initial image/position
-# blocks function takes in image (execute movement rotates robot 
-# to appropriate angles) and determines which block it's looking at
-# calls to db functions return a dictionary where key is the db
-# and value is the Point() location
-# call to block function returns the block number of block in image
 
 # position of dbs
 db_locations = {"left": Point(x=1.0635, y=-0.5, z=0.1905), "middle": Point(x=1.0635, y=0.0, z=0.1905),\
@@ -39,7 +32,7 @@ def identify_dbs(image):
     upper_red = numpy.array([10, 255, 255])
     masks["red"] = cv2.inRange(hsv, lower_red, upper_red)
 
-        # upper and lower bounds for green
+    # upper and lower bounds for green
     # using python 3 bgr [0,175,0] = hsv [60, 255, 175]
     lower_green = numpy.array([50, 100, 100]) 
     upper_green = numpy.array([70, 255, 255])
@@ -56,13 +49,18 @@ def identify_dbs(image):
     for color, mask in masks.items():
         pixels = {"left": 0, "middle": 0, "right": 0}
         
+        # define section of image to use for left, middle and right
         left = mask[y:y+h, x:x+w]
         middle = mask[y:y+h, x+w:x+w+w]
         right = mask[y:y+h, x+w+w:x+3*w]
+
+        # count the number of pixels in each section
         pixels["left"] = cv2.countNonZero(left)
         pixels["middle"] = cv2.countNonZero(middle)
         pixels["right"] = cv2.countNonZero(right)
         location = max(pixels, key=pixels.get)
+
+        # map the relative position of the db (left, middle, right) to the correct Point()
         locations[color] = db_locations[location]
     
     return locations
