@@ -22,7 +22,7 @@ import robot_perception
 # the msg has attributes robot_db and block_id
 
 # start 0.0, -0.386, 1.315, -0.862 
-rest_arm_joint_goal = [0.0, -0.386, 1.315, -0.862]
+rest_arm_joint_goal = [0.0, -0.386, 1.280, -0.915]
 
 # ready to pick up joint space 0.0, 0.370, 0.523, -0.900
 grab_arm_joint_goal = [0.0, 0.370, 0.523, -0.900]
@@ -31,7 +31,7 @@ grab_arm_joint_goal = [0.0, 0.370, 0.523, -0.900]
 pickup_arm_joint_goal = [0.0, 0.207, 0.253, -0.951]
 
 # gripper position
-gripper_joint_goal = [0.009,0.009]
+gripper_joint_goal = [0.015,0.015]
 
 class ExecuteRobotActions(object):
     def __init__(self):
@@ -41,6 +41,7 @@ class ExecuteRobotActions(object):
 
 
         self.cmd_vel_pub = rospy.Publisher("cmd_vel", Twist, queue_size=10)
+        self.move = Twist()
 
         rospy.Subscriber("/q_learning/robot_action", RobotMoveDBToBlock, self.add_action_to_queue)
         # rospy.Subscriber("/scan", LaserScan, self.process_scan)
@@ -52,12 +53,12 @@ class ExecuteRobotActions(object):
         # put in resting position
         self.move_group_arm.go(rest_arm_joint_goal, wait=True)
         self.move_group_arm.stop()
-        rospy.sleep(3)
+        # rospy.sleep(3)
 
         # gripper position
         self.move_group_gripper.go(gripper_joint_goal, wait=True)
         self.move_group_gripper.stop()
-        rospy.sleep(3)
+        # rospy.sleep(3)
 
         
         self.action_queue = []
@@ -122,11 +123,9 @@ class ExecuteRobotActions(object):
 
     def rotate(self, ang):
         r = rospy.Rate(10)
-        cmd =Twist()
-
         while not rospy.is_shutdown() and round(math.radians(ang)-self.yaw, 2) != 0:
-            cmd.angular.z = -0.4 * abs(math.radians(ang)-self.yaw)
-            self.cmd_vel_pub.publish(cmd)
+            self.move.angular.z = -0.4 * abs(math.radians(ang)-self.yaw)
+            self.cmd_vel_pub.publish(self.move)
             r.sleep()   
 
 
@@ -134,51 +133,84 @@ class ExecuteRobotActions(object):
         self.action_queue.append(action_msg)
     
     def move_to_db(self, db_loc):
-        (goal_x, goal_y) = (db_loc.x - 0.25, db_loc.y)
-        move = Twist()
-        r = rospy.Rate(10)
+        (goal_x, goal_y) = (db_loc.x - 0.18, db_loc.y)
+        at_location = False
+        
+        r = rospy.Rate(20)
         # move to correct location
         # round(goal_x - self.x, 2) != 0
-        while not math.isclose(goal_x, self.x, abs_tol = 0.01) and not math.isclose(goal_y, self.y, abs_tol = 0.01):
+        while not at_location:
+            rospy.loginfo("yaw")
+            rospy.loginfo(self.yaw)
             diff_x = goal_x - self.x
             diff_y = goal_y - self.y
 
             angle_to_goal = math.atan2(diff_y, diff_x)
-            # rospy.loginfo(angle_to_goal)
-            rospy.loginfo(math.degrees(angle_to_goal - self.yaw))
+            rospy.loginfo("angle to goal")
+            rospy.loginfo(angle_to_goal)
+            # rospy.loginfo(math.degrees(angle_to_goal - self.yaw))
+            # rospy.loginfo(round(angle_to_goal - self.yaw, 1))
+            if round(angle_to_goal - self.yaw, 2) != 0 and not math.isclose(goal_y, self.y, abs_tol = 0.01):
+                # rospy.loginfo("angular z")
+                # rospy.loginfo(0.4 * (angle_to_goal - self.yaw))
+                self.move.angular.z = 0.4 * (angle_to_goal - self.yaw)
+                # move.linear.x = 0
+            elif not math.isclose(goal_y, self.y, abs_tol = 0.01):
+                self.move.linear.x = 0.4 * abs(goal_y - self.y)
+                self.move.angular.z = 0
+                # rospy.loginfo("linear x")
+                # rospy.loginfo(0.4 * abs(goal_y - self.y))
 
-            if round(angle_to_goal - self.yaw, 1) != 0:
-                move.angular.z = 0.4 * (angle_to_goal - self.yaw)
+            elif round(0 - self.yaw, 1) != 0:
+                self.move.angular.z = 0.4 * (0 - self.yaw)
+                self.move.linear.x = 0
             else:
-                move.linear.x = 0.2
-                move.angular.z = 0
-            # if angle_to_goal < 0:
-            #     if abs(angle_to_goal - self.yaw) > 0.1:
-            #         move.linear.x = 0
-            #         move.angular.z = 0.3
-            #     else:
-            #         move.linear.x = 0.3
-            #         move.angular.z = 0.0
-            # else:
-            #     if abs(angle_to_goal - self.yaw) > 0.1:
-            #         move.linear.x = 0
-            #         move.angular.z = -0.3
-            #     else:
-            #         move.linear.x = 0.3
-            #         move.angular.z = 0.0
+                self.cmd_vel_pub.publish(Twist())
+                at_location = True
 
-            
-            self.cmd_vel_pub.publish(move)
+            self.cmd_vel_pub.publish(self.move)
             r.sleep()
         
-        while round(0- self.yaw, 1) != 0:
-            move.angular.z = 0.4 * (0 - self.yaw)
-            move.linear.x = 0
-            self.cmd_vel_pub.publish(move)
-            r.sleep()
+        # self.cmd_vel_pub.publish(Twist())
 
         rospy.loginfo("got to correct location")
-        self.cmd_vel_pub.publish(Twist())
+        
+        
+    
+    def place_at_block(self, block_loc):
+        
+        at_location = False
+        (goal_x, goal_y) = (block_loc.x + 1, block_loc.y)
+        diff_x = goal_x - self.x
+        diff_y = goal_y - self.y
+
+        goal_angle = math.atan2(diff_y, diff_x)
+        
+        r = rospy.Rate(20) 
+        while not at_location:
+            rospy.loginfo("yaw")
+            rospy.loginfo(self.yaw)
+            rospy.loginfo("goal angle")
+            rospy.loginfo(goal_angle)
+            if round(goal_angle - self.yaw, 1) != 0 and not math.isclose(goal_y, self.y, abs_tol = 0.01):
+                self.move.angular.z = 0.4 * (goal_angle - self.yaw)
+
+            elif not math.isclose(goal_y, self.y, abs_tol = 0.01):
+                self.move.linear.x = 0.5 * abs(goal_y - self.y)
+                self.move.angular.z = 0
+                # rospy.loginfo("linear x")
+                # rospy.loginfo(0.4 * abs(goal_y - self.y))
+
+            elif round(math.radians(-180) - self.yaw, 1) != 0:
+                self.move.angular.z = 0.4 * (math.radians(-180) - self.yaw)
+                self.move.linear.x = 0
+            else:
+                self.cmd_vel_pub.publish(Twist())
+                at_location = True
+
+            self.cmd_vel_pub.publish(self.move)
+            r.sleep()
+
 
 
     def move_robot(self):
@@ -188,7 +220,7 @@ class ExecuteRobotActions(object):
         
         if not self.initialized:
             return 
-        self.action_queue.append(RobotMoveDBToBlock(robot_db = "green", block_id = 1))
+        self.action_queue.append(RobotMoveDBToBlock(robot_db = "green", block_id = 3))
 
         
 
@@ -212,18 +244,26 @@ class ExecuteRobotActions(object):
             
 
             # move arm to dumbbell
-            
-
-            # move gripper
-            
-
-            # lift dumbbell
             self.move_group_arm.go(grab_arm_joint_goal, wait=True)
             self.move_group_arm.stop()
-            rospy.sleep(3)
+
+            # lift dumbbell
+            self.move_group_arm.go(pickup_arm_joint_goal, wait=True)
+            self.move_group_arm.stop()
 
             # move dumbbell to in front of correct block
+            self.place_at_block(block_id_loc)
 
+            # place dumbbell at block
+            self.move_group_arm.go(grab_arm_joint_goal, wait=True)
+            self.move_group_arm.stop()
+
+            self.move_group_arm.go(rest_arm_joint_goal, wait=True)
+            self.move_group_arm.stop()
+
+            # while self.x < -1.60:
+            #     self.cmd_vel_pub.publish(Twist(linear=Vector3(x=-.08)))
+            # self.cmd_vel_pub.publish(Twist())
 
 
             # action complete so remove from queue
